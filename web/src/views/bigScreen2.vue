@@ -112,6 +112,7 @@
 import {defineComponent, onMounted, ref, nextTick} from "vue";
 import * as echarts from 'echarts';
 import CenterTop from '../components/centerTopChart.vue'
+import rightBottomChart from '../components/rightBottomChart.vue'
 import LineChartTemperature from '../components/centerBottomChart.vue'
 import LineChartStrain from '../components/leftTopChart.vue'
 import Line3dShape from '../components/rightBottomChart.vue'
@@ -181,6 +182,7 @@ const showWarnInfoDialog = () => {
 export default defineComponent({
   components:{
     CenterTop,
+    rightBottomChart,
     LineChartTemperature,
     LineChartVibration,
     LineChartStrain,
