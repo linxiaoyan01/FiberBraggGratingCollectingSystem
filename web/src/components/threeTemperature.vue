@@ -3,7 +3,7 @@
 </template>
 <script lang="js">
 import * as echarts from 'echarts';
-import {defineComponent, onMounted, ref} from "vue";
+import {defineComponent, onMounted, ref, onUnmounted} from "vue";
 import axios from "axios";
 import {Tool} from "@/util/tool";
 function dateToGMT(strDate){
@@ -25,13 +25,11 @@ export default defineComponent({
       })
     }
     function getData (value){
-      let now = +new Date();
-      const oneDay = 100;
-      now = new Date(+now + oneDay);
+      let now = new Date();  // 直接创建Date对象，不需要+号
       const valueName = now.getFullYear() + '/' + (now.getMonth() + 1) + '/' + now.getDate() +
           ' ' + (now.getHours() >= 10 ? now.getHours() : '0' + now.getHours()) + ':' +
-          (now.getMinutes() >= 10 ? now.getMinutes() : '0' + now.getMinutes()) +
-          ':' + (now.getSeconds() >= 10 ? now.getSeconds() : '0' + now.getSeconds());
+          (now.getMinutes() >= 10 ? now.getMinutes() : '0' + now.getMinutes()) + ':' +
+          (now.getSeconds() >= 10 ? now.getSeconds() : '0' + now.getSeconds());
       return {
         name: valueName,
         value: [
@@ -40,18 +38,52 @@ export default defineComponent({
         ]
       }
     }
-    onMounted(async () => {
-      let option;
-      let websocket;
-      let token;
+
+    // 生成模拟温度数据
+    function generateSimulatedTemperature(baseTemp, variance) {
+      return baseTemp + (Math.random() * variance * 2 - variance);
+    }
+
+    onMounted(() => {
+      const chartDom = document.getElementById('threeTemperature');
+      console.log('chartDom:', chartDom); // 调试信息
+
+      if (!chartDom) {
+        console.error('找不到图表容器元素');
+        return;
+      }
+
+      let myChart = echarts.init(chartDom);
+      console.log('myChart:', myChart); // 调试信息
+
       let temperature1 = [];
       let temperature2 = [];
       let temperature3 = [];
-      option = {
+
+      // 生成初始数据
+      for(let i = 0; i < 5; i++) {
+        const temp1 = generateSimulatedTemperature(25, 2);
+        const temp2 = generateSimulatedTemperature(23, 1.5);
+        const temp3 = generateSimulatedTemperature(22, 1);
+        
+        const data1 = getData(temp1);
+        const data2 = getData(temp2);
+        const data3 = getData(temp3);
+        
+        temperature1.push(data1);
+        temperature2.push(data2);
+        temperature3.push(data3);
+      }
+
+      console.log('初始数据:', {temperature1, temperature2, temperature3}); // 调试信息
+
+      const option = {
         color: ['#3366CC', '#FFCC99','#99CC33'],
         legend: {
           show: true,
-          orient: 'vertical',
+          orient: 'horizontal',
+          right: 'right',
+          top: 5,
           textStyle: {
             color: '#ffffff',
             fontFamily: '宋体',
@@ -62,17 +94,18 @@ export default defineComponent({
           textStyle: {
             color: '#ffffff',
             fontFamily: '宋体',
+            fontSize: 14,
           },
-          name: '海缆实时温度值',
-          left: 'left',
+          left: 10,
+          top: 5,
         },
         toolbox: {
           show: true,
           feature: {
-            dataView: {readOnly: false},
-            magicType: {type: ['line', 'bar']},
-            restore: {},
-            saveAsImage: {}
+            // dataView: {readOnly: false},
+            // magicType: {type: ['line', 'bar']},
+            // restore: {},
+            // saveAsImage: {}
           }
         },
         tooltip: {
@@ -88,7 +121,6 @@ export default defineComponent({
             }
           },
           formatter: function (params) {
-
             return '时间：'+ params[0].name + '<br/>温度曲线1温度值 : ' + params[0].value[1]
                 + '<br/>温度曲线2温度值 : ' + params[1].value[1]
                 + '<br/>温度曲线3温度值 : ' + params[2].value[1];
@@ -106,6 +138,7 @@ export default defineComponent({
             show: false
           },
           axisLabel: {
+            color: '#ffffff'
           },
           triggerEvent: true
         },
@@ -125,8 +158,8 @@ export default defineComponent({
           },
           axisLine: {
             lineStyle: {
-              color: '#fff',//左边线的颜色
-              width: '1'//坐标线的宽度
+              color: '#fff',
+              width: '1'
             }
           },
           axisTick: {
@@ -134,135 +167,116 @@ export default defineComponent({
           },
           axisLabel: {
             inside: false,
-            formatter: '{value}\n'
+            color: '#ffffff',
+            formatter: '{value}'
           }
         },
         series: [{
           name: '温度传感器1',
           type: 'line',
           smooth: true,
-          showSymbol: false,
-          hoverAnimation: false,
-          symbolSize: 20,
+          showSymbol: true, // 显示数据点
+          hoverAnimation: true,
+          symbolSize: 6,
           itemStyle: {
-            color: '#6A5ACD',
-            normal: {
-              lineStyle: {// 系列级个性化折线样式
-                width: 1,
-                type: 'solid',
-                // color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                //   offset: 0,
-                //   color: '#0000FF'
-                // }, {
-                //   offset: 1,
-                //   color: '#0096FF'
-                // }]),//线条渐变色
-              }
-            },
-          },//线条样式
-          data: temperature1,
+            color: '#3366CC',
+          },
+          areaStyle: {
+            opacity: 0.1
+          },
+          data: temperature1
         }, {
           name: '温度传感器2',
           type: 'line',
           smooth: true,
-          showSymbol: false,
-          hoverAnimation: false,
-          symbolSize: 20,
+          showSymbol: true, // 显示数据点
+          hoverAnimation: true,
+          symbolSize: 6,
           itemStyle: {
-            color: '#6A5ACD',
-            normal: {
-              lineStyle: {// 系列级个性化折线样式
-                width: 1,
-                type: 'solid',
-                // color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                //   offset: 0,
-                //   color: '#0000FF'
-                // }, {
-                //   offset: 1,
-                //   color: '#0096FF'
-                // }]),//线条渐变色
-              }
-            },
-          },//线条样式
-          data: temperature2,
-        },{
+            color: '#FFCC99',
+          },
+          areaStyle: {
+            opacity: 0.1
+          },
+          data: temperature2
+        }, {
           name: '温度传感器3',
           type: 'line',
           smooth: true,
-          showSymbol: false,
-          hoverAnimation: false,
-          symbolSize: 20,
+          showSymbol: true, // 显示数据点
+          hoverAnimation: true,
+          symbolSize: 6,
           itemStyle: {
-            color: '#6A5ACD',
-            normal: {
-              lineStyle: {// 系列级个性化折线样式
-                width: 1,
-                type: 'solid',
-                // color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [{
-                //   offset: 0,
-                //   color: '#0000FF'
-                // }, {
-                //   offset: 1,
-                //   color: '#0096FF'
-                // }]),//线条渐变色
-              }
-            },
-          },//线条样式
-          data: temperature3,
+            color: '#99CC33',
+          },
+          areaStyle: {
+            opacity: 0.1
+          },
+          data: temperature3
         }]
-      }
-      const chartDom = document.getElementById('threeTemperature');
-      let myChart = echarts.init(chartDom);
-      myChart.setOption(option);
-      const onOpen = () =>{
-        console.log('WebSocket连接成功，状态码：',websocket.readyState)
       };
-      const onMessage = function (msg){
-        let data = JSON.parse(msg.data);
-        if(temperature1.length % 20 === 0){
-          for(let i = 0; i < 20; i++){
-            temperature1.shift()
-          }
-        }
-        if(temperature2.length % 20 === 0){
-          for(let i = 0; i < 20; i++){
-            temperature2.shift()
-          }
-        }
-        if(temperature3.length % 20 === 0){
-          for(let i = 0; i < 20; i++){
-            temperature3.shift()
-          }
-        }
-        temperature1.push(getData(data[0].value+2));
-        temperature2.push(getData(data[1].value+1));
-        temperature3.push(getData(data[2].value+0.3));
+
+      console.log('图表配置:', option); // 调试信息
+
+      try {
         myChart.setOption(option);
-      };
-      const onError = ()=>{
-        console.log('WebSocket连接错误，状态码：', websocket.readyState)
-      };
-      const onClose = ()=>{
-        console.log('WebSocket连接关闭，状态码：',websocket.readyState)
-      };
-      const initWebSocket = () =>{
-        //连接成功
-        websocket.onOpen = onOpen;
-        // 收到消息的回调
-        websocket.onmessage = onMessage;
-        // 连接错误
-        websocket.onerror = onError;
-        // 连接关闭的回调
-        websocket.onClose = onClose;
+        console.log('图表已设置配置'); // 调试信息
+      } catch (error) {
+        console.error('设置图表配置时出错:', error);
       }
-      if('WebSocket' in window){
-        token = Tool.uuid(10);
-        //连接地址：ws://127.0.0.1:8080/ws/xxx
-        websocket = new WebSocket(process.env.VUE_APP_WS_SERVER + '/ws/'+token);
-        initWebSocket()
-      }else{
-        alert('当前浏览器 不支持')
+
+      // 立即更新一次数据
+      updateChart();
+
+      // 定时更新数据
+      function updateChart() {
+        const temp1 = generateSimulatedTemperature(25, 2);
+        const temp2 = generateSimulatedTemperature(23, 1.5);
+        const temp3 = generateSimulatedTemperature(22, 1);
+
+        if(temperature1.length > 20) {
+          temperature1.shift();
+          temperature2.shift();
+          temperature3.shift();
+        }
+
+        temperature1.push(getData(temp1));
+        temperature2.push(getData(temp2));
+        temperature3.push(getData(temp3));
+
+        try {
+          myChart.setOption({
+            series: [{
+              data: temperature1
+            }, {
+              data: temperature2
+            }, {
+              data: temperature3
+            }]
+          });
+        } catch (error) {
+          console.error('更新图表数据时出错:', error);
+        }
       }
+
+      // 每3秒更新一次数据
+      const timer = setInterval(updateChart, 3000);
+
+      // 组件卸载时清除定时器
+      onUnmounted(() => {
+        if (timer) {
+          clearInterval(timer);
+        }
+        // 销毁图表实例
+        if (myChart) {
+          myChart.dispose();
+        }
+      });
+
+      // 窗口大小改变时重置图表大小
+      window.addEventListener('resize', () => {
+        myChart.resize();
+      });
     });
     return {}
   },
@@ -271,6 +285,7 @@ export default defineComponent({
 
 <style scoped>
 .threeTemperature{
-  display: flex;
+  width: 100%;
+  height: 400px;
 }
 </style>

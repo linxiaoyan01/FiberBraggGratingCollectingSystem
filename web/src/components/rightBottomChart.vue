@@ -121,46 +121,53 @@ async function generateData(queryLast15Result) {
   //console.log("resultData", resultData)
   return resultData;
 }
+
+function generateSimulatedData() {
+  const data = [];
+  // 生成30个点的模拟数据
+  for (let i = 0; i < 30; i++) {
+    // 使用正弦函数生成波浪形状
+    const x = i;
+    const y = 0;
+    const z = Math.sin(i * 0.5) * 2 + Math.random() * 0.5 - 1.5; // 生成-3到0之间的波浪形状
+    data.push([x, y, z]);
+  }
+  return data;
+}
+
 export default defineComponent({
   name: 'rightBottomChart',
   setup() {
-    onMounted(async ()=>{
+    onMounted(async () => {
       const chartDom = document.getElementById('rightBottomChart');
       const myChart = echarts.init(chartDom);
       let option;
-      let websocket;
-      let token;
-      let queryLast15Result = []
-      queryLast15Result = await queryLast15()
-      let createTime = queryLast15Result.data.content[14].createTime.toLocaleString('zh');
-      console.log("createTime", createTime)
-      var shape = "shape";
-      var temp = "";
-
-      //let createTime = queryLast15Result.data.content[14].createTime.replace("CST",'GMT+0800').toLocaleString()
-      //console.log(data.length);
+      
       option = {
         toolbox: {
           feature: {
-            dataView: { show: true, readOnly: false },
-            restore: { show: true },
-            saveAsImage: { show: true },
+            // dataView: { show: true, readOnly: false },
+            // restore: { show: true },
+            // saveAsImage: { show: true },
           }
         },
         title: {
           text: '海底电缆实时形状',
-          textStyle:{
+          textStyle: {
             color: '#ffffff',
             fontFamily: '宋体',
+            fontSize: 14,
           },
+          left: 10,
+          top: 5,
         },
         tooltip: {},
         backgroundColor: 'transparent',
         visualMap: {
           show: false,
           dimension: 2,
-          min: 0,
-          max: 30,
+          min: -3,
+          max: 0,
           inRange: {
             color: [
               '#313695',
@@ -183,8 +190,8 @@ export default defineComponent({
           axisLabel: {
             show: true,
             textStyle: {
-              color: '#ffffff',  //更改坐标轴文字颜色
-              fontSize : 12      //更改坐标轴文字大小
+              color: '#ffffff',
+              fontSize : 12
             }
           },
           nameTextStyle:{
@@ -197,8 +204,8 @@ export default defineComponent({
           axisLabel: {
             show: true,
             textStyle: {
-              color: '#ffffff',  //更改坐标轴文字颜色
-              fontSize : 12      //更改坐标轴文字大小
+              color: '#ffffff',
+              fontSize : 12
             }
           },
           nameTextStyle:{
@@ -215,8 +222,8 @@ export default defineComponent({
           axisLabel: {
             show: true,
             textStyle: {
-              color: '#ffffff',  //更改坐标轴文字颜色
-              fontSize : 12      //更改坐标轴文字大小
+              color: '#ffffff',
+              fontSize : 12
             }
           },
           nameTextStyle:{
@@ -240,100 +247,33 @@ export default defineComponent({
             symbolSize: 4,
             symbolRotate: null,
             showSymbol: true,
-            data: [
-                [0,0,0],
-                [1,0,-0.03525838],
-                [2,0,0.063254433],
-                [2.99999,0,-0.219677246],
-                [3.99998,0,-0.313990242],
-                [4.99996,0,-0.755997135],
-                [5.99993,0,-1.57492344],
-                [6.9999,0,-2.253100091],
-                [7.99987,0,-3.01845234],
-                [8.99983,0,-2.415426429],
-                [9.99978,0,-1.526751372],
-                [10.99977,0,-0.575292324],
-                [11.99977,0,-0.371192939],
-                [12.99977,0,-0.364782675],
-                [13.99975,0,0.019789412],
-                [15,0,0.00923835],
-                [16,0,-0.023213068],
-                [17,0,-0.39315502],
-                [18,0,-0.434432252],
-                [19,0,-1.000892699],
-                [20,0,-1.814506772],
-                [21,0,-2.489081286],
-                [22,0,-3.438102746],
-                [23,0,-2.858221361],
-                [24,0,-1.098724382],
-                [25,0,-0.839583901],
-                [26,0,-0.554524772],
-                [27,0,-0.276296898],
-                [28,0,-0.349620175],
-                [29,0,-0.391709386]
-            ],
-                // await generateData(queryLast15Result),
+            data: generateSimulatedData(),
             lineStyle: {
               width: 4
             }
           }
-        ],
-        // graphic: {
-        //   elements: [
-        //     {
-        //       type: 'text',
-        //       right: 10,
-        //       bottom: 0,
-        //       style: {
-        //         text: createTime,
-        //         font: 'bolder 17px monospace',
-        //         fill: 'rgba(225, 225, 225, 0.25)'
-        //       },
-        //       z: 100
-        //     }
-        //   ]
-        // }
+        ]
       };
-      //window.onresize = myChart.resize;
 
-      const onOpen = () =>{
-        console.log('WebSocket连接成功，状态码：',websocket.readyState)
-      };
-      const onMessage = function (msg){
-        let data = JSON.parse(msg.data);
-        for(let i=0;i<30;i++){
-          option.series[0].data[i][2]=data[i];
-        }
+      // 初始更新
+      myChart.setOption(option);
+
+      // 定时更新数据
+      function updateChart() {
+        option.series[0].data = generateSimulatedData();
         myChart.setOption(option);
-      };
-      const onError = ()=>{
-        console.log('WebSocket连接错误，状态码：', websocket.readyState)
-      };
-      const onClose = ()=>{
-        console.log('WebSocket连接关闭，状态码：',websocket.readyState)
-      };
-      const initWebSocket = () =>{
-        //连接成功
-        websocket.onOpen = onOpen;
-        // 收到消息的回调
-        websocket.onmessage = onMessage;
-        // 连接错误
-        websocket.onerror = onError;
-        // 连接关闭的回调
-        websocket.onClose = onClose;
-      }
-      if('WebSocket' in window){
-        token = Tool.uuid(10);
-        websocket = new WebSocket(process.env.VUE_APP_WS_SERVER + '/MEMSWs/'+token);
-        initWebSocket()
-      }else{
-        alert('当前浏览器 不支持')
       }
 
+      // 每3秒更新一次数据
+      setInterval(updateChart, 3000);
+
+      // 窗口大小改变时重置图表大小
+      window.addEventListener('resize', () => {
+        myChart.resize();
+      });
     })
 
-    return{
-    }
+    return {}
   },
 })
 </script>

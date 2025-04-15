@@ -3,50 +3,82 @@
 </template>
 <script lang="js">
 import * as echarts from 'echarts';
-import {defineComponent, onMounted} from "vue";
-import {Tool} from "@/util/tool";
+import {defineComponent, onMounted, onUnmounted} from "vue";
 
 export default defineComponent({
   name: 'vibrationWave',
   setup: function () {
-    onMounted(async () => {
-      let websocket;
-      let token;
+    onMounted(() => {
       let vibration = [];
-      var chartDom = document.getElementById('vibrationWave');
-      var myChart = echarts.init(chartDom);
+      const chartDom = document.getElementById('vibrationWave');
+      const myChart = echarts.init(chartDom);
       let time = new Date();
       let data = {
         categoryData:[],
         valueData:[]
-      } ;
+      };
+
+      // 添加模拟数据生成函数
+      function generateMockData() {
+        const mockData = [];
+        for (let i = 0; i < 500; i++) {
+          // 生成-50到50之间的随机振动值
+          const value = Math.sin(i * 0.1) * 25 + Math.random() * 10 - 5;
+          mockData.push(Number(value.toFixed(2)));
+        }
+        return mockData;
+      }
+
+      function generateData(list) {
+        const categoryData = [];
+        const valueData = [];
+        time = new Date(); // 更新当前时间
+        const baseTime = time.getTime();
+        
+        for (let i = 0; i < list.length; i++) {
+          const currentTime = new Date(baseTime + i * 100); // 每个点间隔100ms
+          categoryData.push(
+            echarts.format.formatTime('yyyy-MM-dd\nhh:mm:ss', currentTime)
+          );
+          valueData.push(list[i]);
+        }
+        return {
+          categoryData: categoryData,
+          valueData: valueData
+        };
+      }
+
       let option = {
         title: {
-          text: '海底电缆振动波长值',
+          text: '海底电缆振动波形',
           textStyle: {
             color: '#ffffff',
             fontFamily: '宋体',
+            fontSize: 14
           },
+          left: 'center',
+          top: 5
         },
         toolbox: {
+          right: 10,
+          top: 10,
           feature: {
-            dataZoom: {
-              yAxisIndex: false
-            },
-            saveAsImage: {
-              pixelRatio: 2
-            }
+            // saveAsImage: {
+            //   pixelRatio: 2
+            // }
           }
         },
         tooltip: {
           trigger: 'axis',
           axisPointer: {
-            type: 'shadow'
+            type: 'line'
           }
         },
         grid: {
           left: 90,
-          bottom: 90
+          right: 40,
+          bottom: 90,
+          top: 50
         },
         dataZoom: [
           {
@@ -64,75 +96,79 @@ export default defineComponent({
           },
           splitArea: {
             show: false
+          },
+          axisLabel: {
+            color: '#ffffff'
           }
         },
         yAxis: {
+          name: '振幅',
+          nameLocation: 'middle',
+          nameGap: 65,
+          nameTextStyle: {
+            color: '#ffffff',
+            padding: [0, 0, 10, 0]
+          },
           splitArea: {
             show: false
           },
-          scale:true,
+          scale: true,
+          axisLabel: {
+            color: '#ffffff'
+          }
         },
         series: [
           {
             type: 'line',
             data: data.valueData,
-            large: true
+            large: true,
+            lineStyle: {
+              color: '#3366CC'
+            },
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                {
+                  offset: 0,
+                  color: 'rgba(51, 102, 204, 0.3)'
+                },
+                {
+                  offset: 1,
+                  color: 'rgba(51, 102, 204, 0)'
+                }
+              ])
+            }
           }
         ]
       };
-      time -= 5000
-      function generateData(list) {
-        const categoryData = [];
-        const valueData = [];
-        for (let i = 0; i < 500; i++) {
-          categoryData.push(
-              echarts.format.formatTime('yyyy-MM-dd\nhh:mm:ss', time, false)
-          );
-          valueData.push(list[i]);
-          time += 10
-        }
-        return {
-          categoryData: categoryData,
-          valueData: valueData
-        };
-      }
-      const onOpen = () =>{
-        console.log('WebSocket连接成功，状态码：',websocket.readyState)
-      };
-      const onMessage = function (msg){
-        vibration = JSON.parse(msg.data)
+
+      function updateData() {
+        vibration = generateMockData();
         data = generateData(vibration);
         option.xAxis.data = data.categoryData;
         option.series[0].data = data.valueData;
-        myChart.setOption(option)
-        console.log(vibration)
-      };
-      const onError = ()=>{
-        console.log('WebSocket连接错误，状态码：', websocket.readyState)
-      };
-      const onClose = ()=>{
-        console.log('WebSocket连接关闭，状态码：',websocket.readyState)
-      };
-      const initWebSocket = () =>{
-        //连接成功
-        websocket.onOpen = onOpen;
-        // 收到消息的回调
-        websocket.onmessage = onMessage;
-        // 连接错误
-        websocket.onerror = onError;
-        // 连接关闭的回调
-        websocket.onClose = onClose;
+        myChart.setOption(option);
       }
-      if('WebSocket' in window){
 
-        token = Tool.uuid(10);
-        console.log("******",token)
-        //连接地址：ws://127.0.0.1:8080/vibrationWaveWs/xxx
-        websocket = new WebSocket(process.env.VUE_APP_WS_SERVER + '/vibrationWaveWs/' + token);
-        initWebSocket()
-      }else{
-        alert('当前浏览器 不支持')
-      }
+      // 初始更新
+      updateData();
+      
+      // 每秒更新一次数据
+      const timer = setInterval(updateData, 1000);
+
+      // 组件卸载时清除定时器
+      onUnmounted(() => {
+        if (timer) {
+          clearInterval(timer);
+        }
+        if (myChart) {
+          myChart.dispose();
+        }
+      });
+
+      // 窗口大小改变时重置图表大小
+      window.addEventListener('resize', () => {
+        myChart.resize();
+      });
     })
   },
 })
@@ -140,6 +176,7 @@ export default defineComponent({
 
 <style scoped>
 .vibrationWave{
-  display: flex;
+  width: 100%;
+  height: 400px;
 }
 </style>

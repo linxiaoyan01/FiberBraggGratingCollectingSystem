@@ -56,7 +56,10 @@ export default defineComponent({
           textStyle: {
             color: '#ffffff',
             fontFamily: '宋体',
+            fontSize: 14,
           },
+          left: 10,
+          top: 5,
         },
         xAxis: {
           max: 'dataMax'
@@ -69,7 +72,7 @@ export default defineComponent({
           animationDurationUpdate: 300,
         },
         grid: {
-          top: 40,
+          top: 60,
           bottom: 40,
           left: 80,
           right: 40
@@ -135,100 +138,36 @@ export default defineComponent({
           ]
         }
       };
-      let websocket;
-      let token;
-      const onOpen = () => {
-        console.log('WebSocket连接成功，状态码：', websocket.readyState)
-      };
-      const onMessage = function (msg) {
-        let data = JSON.parse(msg.data);
-        var value = Array(13);
-        for (let i=0;i<13;i++){
-          value[i]=data[i+4].value;
-          if(value[i]>0) {
-            while (value[i] > 30) {
-              value[i] = value[i] - 20;
-            }
-          }
-          if (value[i]<0){
-            while (value[i]<-30){
-              value[i]=value[i]+20;
-            }
-          }
-          strain.push(Math.round(value[i]*100)/100);
+
+      // 模拟数据生成函数
+      function generateSimulatedData() {
+        const simulatedData = [];
+        for (let i = 0; i < 13; i++) {
+          // 生成-30到30之间的随机应变值
+          let value = Math.round((Math.random() * 60 - 30) * 100) / 100;
+          simulatedData.push(value);
         }
-        // for (let i = 4; i < 17; i++) {
-        //   //四舍五入取两位小数
-        //   if(i==4){
-        //     strain.push(Math.round((data[i].value-30) * 100) / 100);
-        //   }
-        //   if(i==5){
-        //     strain.push(Math.round((data[i].value-30) * 100) / 100);
-        //   }
-        //   if(i==6){
-        //     strain.push(Math.round((data[i].value+60) * 100) / 100);
-        //   }
-        //   if(i==7){
-        //     strain.push(Math.round((data[i].value+70) * 100) / 100);
-        //   }
-        //   if(i==8){
-        //     strain.push(Math.round((data[i].value+90) * 100) / 100);
-        //   }
-        //   if(i==9){
-        //     strain.push(Math.round(data[i].value * 100) / 100);
-        //   }
-        //   if(i==10){
-        //     strain.push(Math.round((data[i].value+70) * 100) / 100);
-        //   }
-        //   if(i==11){
-        //     strain.push(Math.round((data[i].value+80) * 100) / 100);
-        //   }
-        //   if(i==12){
-        //     strain.push(Math.round((data[i].value-40) * 100) / 100);
-        //   }
-        //   if(i==13){
-        //     strain.push(Math.round((data[i].value+70) * 100) / 100);
-        //   }
-        //   if(i==14){
-        //     strain.push(Math.round((data[i].value+160) * 100) / 100);
-        //   }
-        //   if(i==15){
-        //     strain.push(Math.round((data[i].value+30) * 100) / 100);
-        //   }
-        //   if(i==16){
-        //     strain.push(Math.round(data[i].value * 100) / 100);
-        //   }
-        // }
-        option.series[0].data = strain;
-        strain = [];
-        option.graphic.elements[0].style.text = new Date().format("yyyy-MM-dd hh:mm:ss");
-        myChart.setOption(option);
-      };
-      const onError = () => {
-        console.log('WebSocket连接错误，状态码：', websocket.readyState)
-      };
-      const onClose = () => {
-        console.log('WebSocket连接关闭，状态码：', websocket.readyState)
-      };
-      const initWebSocket = () => {
-        //连接成功
-        websocket.onOpen = onOpen;
-        // 收到消息的回调
-        websocket.onmessage = onMessage;
-        // 连接错误
-        websocket.onerror = onError;
-        // 连接关闭的回调
-        websocket.onClose = onClose;
+        return simulatedData;
       }
 
-      if ('WebSocket' in window) {
-        token = Tool.uuid(10);
-        //连接地址：ws://127.0.0.1:8080/ws/xxx
-        websocket = new WebSocket(process.env.VUE_APP_WS_SERVER + '/ws/' + token);
-        initWebSocket()
-      } else {
-        alert('当前浏览器 不支持')
+      // 定时更新数据
+      function updateChart() {
+        strain = generateSimulatedData();
+        option.series[0].data = strain;
+        option.graphic.elements[0].style.text = new Date().format("yyyy-MM-dd hh:mm:ss");
+        myChart.setOption(option);
       }
+
+      // 初始更新
+      updateChart();
+      
+      // 每3秒更新一次数据
+      setInterval(updateChart, 3000);
+
+      // 窗口大小改变时重置图表大小
+      window.addEventListener('resize', () => {
+        myChart.resize();
+      });
     })
   }
 })

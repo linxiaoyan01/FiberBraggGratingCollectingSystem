@@ -115,7 +115,23 @@ export default defineComponent({
       }
     })
     function handleQuery(){
-      return axios.get("/txt/minAndMaxFromLast24Hours")
+      // 生成模拟数据
+      const maxArray = [];
+      const minArray = [];
+      for(let i = 0; i < 24; i++) {
+        // 生成20-40度之间的随机温度
+        maxArray.push(Math.round((Math.random() * 20 + 20) * 10) / 10);
+        // 生成-10到10度之间的随机温度
+        minArray.push(Math.round((Math.random() * 20 - 10) * 10) / 10);
+      }
+      return Promise.resolve({
+        data: {
+          content: maxArray.map((max, index) => ({
+            max: max,
+            min: minArray[index]
+          }))
+        }
+      });
     }
     onMounted(async ()=>{
       let maxArray = []

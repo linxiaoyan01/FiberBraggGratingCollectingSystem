@@ -87,7 +87,7 @@
       </div>
       <div style="display: flex; flex-direction: row-reverse; margin-bottom: 0px" >
         <a-button @click="pageTurning">曲线图翻页</a-button>
-        <a-button @click="HispageTurning">历史数据图</a-button>
+        <!-- <a-button @click="HispageTurning">历史数据图</a-button> -->
       </div>
     </div>
   </a-layout-content>
