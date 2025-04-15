@@ -8,7 +8,12 @@
       <div class="header-wrap">
         <div class="header-left">
           <a-menu-item key="/p_index">
-            <router-link to="/p_index">首页</router-link>
+            <router-link to="/p_index">海底管道应力/应变监测系统</router-link>
+          </a-menu-item>
+          <a-menu-item key="screen-switch">
+            <router-link to="/screen2">
+              海底管道位移变形监测系统
+            </router-link>
           </a-menu-item>
           <a-menu-item key="/p_index/detail">
             <router-link to="/p_index/detail">历史数据查询</router-link>
@@ -37,11 +42,12 @@ import { defineComponent, ref, computed } from 'vue';
 import store from "@/store";
 import axios from "axios";
 import {message} from "ant-design-vue";
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 export default defineComponent({
   name: 'the-header',
   setup(){
     const router=useRouter()
+    const route = useRoute();
     const user = computed(()=>{
       return store.state.user
     });
@@ -62,6 +68,10 @@ export default defineComponent({
         }
       })
     }
+    // 计算当前所在的屏幕
+    const currentScreen = computed(() => {
+      return route.path;
+    });
     // watch: {
     //   //使用watch 监听$router的变化
     //   $route(to, from) {
@@ -79,7 +89,8 @@ export default defineComponent({
     return {
       transitionName,
       logout,
-      user
+      user,
+      currentScreen,
     }
   },
 });

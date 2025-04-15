@@ -4,7 +4,7 @@
     <div style="height:40px; display: flex;justify-content: space-between" >
       <dv-decoration-8 style="width:250px;height:30px;" />
         <div style="font-size: 28px; width:400px;color: #809ed4;text-align:center;display: inline-block;vertical-align: center;"  >
-          <div>海底管道应力/应变监测系统</div>
+          <div>海底管道位移变形监测系统</div>
           <div style="transform: translate(-47px, 0px);"><dv-decoration-3 style="width:100%;height:20px;" /></div>
         </div>
       <dv-decoration-8 :reverse=true style="width:250px;height:30px;" />
@@ -37,17 +37,12 @@
           <div style="height: 100%; border-color: white">
             <div class="imgTop">
                 <span>管道监测示意图</span>
-                <span style="right: 0px">
-                  <router-link to="/screen1">
-                    <a-button>切换到温度/应变监测</a-button>
-                  </router-link>
-                </span>
             </div>
-            <div style="height: calc(100% - 40px); width: 100%; position: relative;">
-              <div style="display: flex; height: 100%; justify-content: center; align-items: center;">
+            <div style="height: calc(100% - 40px); width: 100%;">
+              <div style="height: 100%; display: flex; justify-content: center; align-items: center; padding: 10px;">
                 <img 
                   src="@/assets/图片2.png" 
-                  style="width: 60%; height: 80%; object-fit: contain;" 
+                  style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;" 
                   alt="海缆监测示意图"
                 >
               </div>

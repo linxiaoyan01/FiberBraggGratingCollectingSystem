@@ -37,17 +37,12 @@
           <div style="height: 100%; border-color: white">
             <div class="imgTop">
                 <span>管道监测示意图</span>
-                <span style="right: 0px">
-                  <router-link to="/screen2">
-                    <a-button>切换到位移/振动监测</a-button>
-                  </router-link>
-                </span>
             </div>
-            <div style="height: calc(100% - 40px); width: 100%; position: relative;">
-              <div style="display: flex; height: 100%; justify-content: center; align-items: center;">
+            <div style="height: calc(100% - 40px); width: 100%;">
+              <div style="height: 100%; display: flex; justify-content: center; align-items: center; padding: 10px;">
                 <img 
                   src="@/assets/图片1.png" 
-                  style="width: 60%; height: 80%; object-fit: contain;" 
+                  style="max-width: 100%; max-height: 100%; width: auto; height: auto; object-fit: contain;" 
                   alt="海缆监测示意图"
                 >
               </div>
